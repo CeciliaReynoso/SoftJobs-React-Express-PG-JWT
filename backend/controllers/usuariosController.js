@@ -24,23 +24,6 @@ const postLogin = async (req, res, next) => {
   }
 };
 
-const logout = (req, res, next) => {
-  try {
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString();
-    const formattedTime = now.toLocaleTimeString();
-    const email = req.email || 'Desconocido';
-
-    console.log(`
-      ${formattedDate} - ${formattedTime} - Usuario: ${email} ha cerrado sesión
-    `);
-
-    res.send("Logout exitoso");
-  } catch (error) {
-    next(error);
-  }
-};
-
 const getUsuarios = async (req, res, next) => {
   try {
     const Authorization = req.header("Authorization");
@@ -100,4 +83,4 @@ const putUsuario = async (req, res, next) => {
   }
 };
 
-module.exports = { postLogin, logout, getUsuarios, getUsuarioPorId, postUsuario, deleteUsuario, putUsuario };
+module.exports = { postLogin, getUsuarios, getUsuarioPorId, postUsuario, deleteUsuario, putUsuario };

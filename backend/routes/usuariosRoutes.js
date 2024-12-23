@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const {
   postLogin,
-  logout,
   getUsuarios,
   getUsuarioPorId,
   postUsuario,
@@ -14,7 +13,6 @@ const { verificarCredencialesMiddleware, validarTokenMiddleware, reportarConsult
 router.use(reportarConsultasMiddleware);
 
 router.post("/login", verificarCredencialesMiddleware, postLogin);
-router.post("/logout", validarTokenMiddleware, logout);
 router.get("/usuarios", validarTokenMiddleware, getUsuarios);
 router.get("/usuarios/:id", validarTokenMiddleware, getUsuarioPorId);
 router.post("/usuarios", verificarCredencialesMiddleware, postUsuario);
