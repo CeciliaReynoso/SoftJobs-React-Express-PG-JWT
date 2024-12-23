@@ -52,7 +52,7 @@ const postLogin = async (req, res) => {
     if (!bcrypt.compareSync(password, user.password)) {
       return res.status(401).send("Email o contraseña incorrecta");
     }
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { algorithm: 'HS256' });
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: 60 });
     res.send({ token });
   } catch (error) {
     res.status(error.code || 500).send(error.message);

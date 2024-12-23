@@ -24,20 +24,38 @@ const validarTokenMiddleware = (req, res, next) => {
 };
 
 const reportarConsultasMiddleware = (req, res, next) => {
-        const now = new Date();
-        const formattedDate = now.toLocaleDateString();
-        const formattedTime = now.toLocaleTimeString();
-        const url = req.url;
-    
-        res.on('finish', () => {
-            const statusCode = res.statusCode;
-            console.log(`
-            ${formattedDate} - ${formattedTime} - ${req.method} ${req.url} - ${statusCode}
-            `);
-        });
-    
-        next();
-    };
+  const now = new Date();
+  const formattedDate = now.toLocaleDateString();
+  const formattedTime = now.toLocaleTimeString();
+  const url = req.url;
+  let email = 'Desconocido';
 
+  // Extraer el email del token JWT si está presente
+  const Authorization = req.header("Authorization");
+  if (Authorization) {
+    const token = Authorization.split("Bearer ")[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      email = decoded.email;
+    } catch (error) {
+      console.log("Error al decodificar el token:", error.message);
+    }
+  }
+
+  res.on('finish', () => {
+    const statusCode = res.statusCode;
+    console.log(`
+      ${formattedDate} - ${formattedTime} - ${req.method} ${req.url} - ${statusCode} - Usuario: ${email}
+    `);
+  });
+
+  res.on('error', (err) => {
+    console.log(`
+      ${formattedDate} - ${formattedTime} - ${req.method} ${req.url} - Error: ${err.message} - Usuario: ${email}
+    `);
+  });
+
+  next();
+};
 
 module.exports = { verificarCredencialesMiddleware, validarTokenMiddleware, reportarConsultasMiddleware };
