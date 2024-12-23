@@ -8,6 +8,7 @@ const {
   registrarUsuario
 } = require("../models/consultas");
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const getUsuarios = async (req, res) => {
   try {
@@ -42,10 +43,15 @@ const postUsuario = async (req, res) => {
   }
 };
 
+
+
 const postLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await verificarCredenciales(email, password);
+    if (!bcrypt.compareSync(password, user.password)) {
+      return res.status(401).send("Email o contraseña incorrecta");
+    }
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { algorithm: 'HS256' });
     res.send({ token });
   } catch (error) {
@@ -65,10 +71,15 @@ const deleteUsuario = async (req, res) => {
 
 const putUsuario = async (req, res) => {
   try {
-    const { passwordEncriptada, rol, lenguage } = req.body;
+    let { password, rol, lenguage } = req.body;
     const { id } = req.params;
-    const usuarioModificado = await modificarUsuario(id, req.email, passwordEncriptada, rol, lenguage);
-    res.send(`El usuario ${req.email} ha modificado el evento de id ${id}`);
+
+    if (password) {
+      password = bcrypt.hashSync(password, 10);
+    }
+
+    const usuarioModificado = await modificarUsuario(id, req.email, password, rol, lenguage);
+    res.send(`El usuario ${req.email} ha modificado datos del usuario con id ${id}`);
   } catch (error) {
     res.status(error.code || 500).send(error.message || "Error interno del servidor");
   }

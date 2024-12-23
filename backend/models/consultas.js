@@ -6,9 +6,9 @@ const obtenerUsuarios = async () => {
   return rows;
 };
 
-const modificarUsuario = async (id, email, passwordEncriptada, rol, lenguage) => {
-  const consulta = "UPDATE usuarios SET email = $1, passwordEncriptada = $2, rol = $3, lenguage = $4 WHERE id = $5 RETURNING *";
-  const values = [email, passwordEncriptada, rol, lenguage, id];
+const modificarUsuario = async (id, email, password, rol, lenguage) => {
+  const consulta = "UPDATE usuarios SET email = $1, password = $2, rol = $3, lenguage = $4 WHERE id = $5 RETURNING *";
+  const values = [email, password, rol, lenguage, id];
   const result = await DB.query(consulta, values);
   if (result.rowCount === 0) {
     throw { code: 404, message: "No se consiguió ningún usuario con este id" };
