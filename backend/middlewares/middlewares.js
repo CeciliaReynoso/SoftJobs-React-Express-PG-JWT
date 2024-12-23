@@ -58,4 +58,11 @@ const reportarConsultasMiddleware = (req, res, next) => {
   next();
 };
 
-module.exports = { verificarCredencialesMiddleware, validarTokenMiddleware, reportarConsultasMiddleware };
+const manejarErroresMiddleware = (err, req, res, next) => {
+  console.error(`
+    ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString()} - ${req.method} ${req.url} - Error: ${err.message} - Usuario: ${req.email || 'Desconocido'}
+  `);
+  res.status(500).send('Algo salió mal!');
+};
+
+module.exports = { verificarCredencialesMiddleware, validarTokenMiddleware, reportarConsultasMiddleware, manejarErroresMiddleware };

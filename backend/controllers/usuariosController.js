@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const {
   obtenerUsuarios,
   modificarUsuario,
@@ -7,10 +9,39 @@ const {
   verificarCredenciales,
   registrarUsuario
 } = require("../models/consultas");
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 
-const getUsuarios = async (req, res) => {
+const postLogin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const user = await verificarCredenciales(email, password);
+    if (!bcrypt.compareSync(password, user.password)) {
+      return res.status(401).send("Email o contraseña incorrecta");
+    }
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '1h' });
+    res.send({ token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const logout = (req, res, next) => {
+  try {
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString();
+    const formattedTime = now.toLocaleTimeString();
+    const email = req.email || 'Desconocido';
+
+    console.log(`
+      ${formattedDate} - ${formattedTime} - Usuario: ${email} ha cerrado sesión
+    `);
+
+    res.send("Logout exitoso");
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUsuarios = async (req, res, next) => {
   try {
     const Authorization = req.header("Authorization");
     const token = Authorization.split("Bearer ")[1];
@@ -19,57 +50,41 @@ const getUsuarios = async (req, res) => {
     const usuario = await obtenerUsuarioPorEmail(email);
     res.json([usuario]);
   } catch (error) {
-    res.status(500).send(error.message);
+    next(error);
   }
 };
 
-const getUsuarioPorId = async (req, res) => {
+const getUsuarioPorId = async (req, res, next) => {
   const { id } = req.params;
   try {
     const usuario = await obtenerUsuarioPorId(id);
     res.json(usuario);
   } catch (error) {
-    res.status(error.code).send(error.message);
+    next(error);
   }
 };
 
-const postUsuario = async (req, res) => {
+const postUsuario = async (req, res, next) => {
   try {
     const { email, password, rol, lenguage } = req.body;
     await registrarUsuario({ email, password, rol, lenguage });
     res.send("Usuario creado con éxito");
   } catch (error) {
-    res.status(500).send(error.message);
+    next(error);
   }
 };
 
-
-
-const postLogin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await verificarCredenciales(email, password);
-    if (!bcrypt.compareSync(password, user.password)) {
-      return res.status(401).send("Email o contraseña incorrecta");
-    }
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: 60 });
-    res.send({ token });
-  } catch (error) {
-    res.status(error.code || 500).send(error.message);
-  }
-};
-
-const deleteUsuario = async (req, res) => {
+const deleteUsuario = async (req, res, next) => {
   try {
     const { id } = req.params;
     await eliminarUsuario(id);
     res.send(`El usuario con id ${id} ha sido eliminado`);
   } catch (error) {
-    res.status(error.code).send(error.message);
+    next(error);
   }
 };
 
-const putUsuario = async (req, res) => {
+const putUsuario = async (req, res, next) => {
   try {
     let { password, rol, lenguage } = req.body;
     const { id } = req.params;
@@ -79,10 +94,10 @@ const putUsuario = async (req, res) => {
     }
 
     const usuarioModificado = await modificarUsuario(id, req.email, password, rol, lenguage);
-    res.send(`El usuario ${req.email} ha modificado datos del usuario con id ${id}`);
+    res.send(`El usuario ${req.email} ha modificado el evento de id ${id}`);
   } catch (error) {
-    res.status(error.code || 500).send(error.message || "Error interno del servidor");
+    next(error);
   }
 };
 
-module.exports = { getUsuarios, getUsuarioPorId, postUsuario, postLogin, deleteUsuario, putUsuario };
+module.exports = { postLogin, logout, getUsuarios, getUsuarioPorId, postUsuario, deleteUsuario, putUsuario };
